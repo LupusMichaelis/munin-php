@@ -1,0 +1,48 @@
+#!/bin/bash
+
+declare -A title=(
+	[fpm_num]='Number of running PHP FPM processes'
+);
+
+declare -r fpmcmd=${phpfpmcmd-'php-fpm'}
+
+munin-php-main()
+{
+	local -r callee=$(basename "$0")
+	local -r function="${callee#php_}"
+	local -r action="$1"
+
+	if [ -z "$function" ]
+	then
+		echo You must name a function, for example:
+		echo ln -s \$MUNIN_SHARE_PLUGIN/"$callee" \$MUNIN_ETC_PLUGIN/"$callee"fpm_num
+		exit 1
+	fi
+
+	if [ ! -v title[$function] ]
+	then
+		echo Function "'$function'" not supported
+		exit 1
+	fi
+
+	case "$action" in
+		config)
+			"munin-php-$function-labels"
+			;;
+		*)
+			"munin-php-$function-values"
+	esac
+}
+
+munin-php-fpm_num-labels()
+{
+	echo "graph_title ${title[$function]}"
+	echo php_fpm_num.label Number of running workers
+}
+
+munin-php-fpm_num-values()
+{
+	echo php_fpm_num.value $(ps --no-headers -o pid -C "$fpmcmd" | wc -l)
+}
+
+munin-php-main "$@"

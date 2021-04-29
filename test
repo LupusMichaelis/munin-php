@@ -1,0 +1,88 @@
+#!/bin/bash
+
+test "$1" = '-v' && declare -r verbose=$?
+
+test-success()
+{
+	local success="$1"
+
+	if [ 0 != "$success" ]
+	then
+		test -v verbose && {
+			echo
+			echo 'Command did fail'
+		} >&2
+		return 1
+	fi
+
+	return 0
+}
+
+test-failure()
+{
+	local success="$1"
+
+	if [ 0 = "$success" ]
+	then
+		test -v verbose && {
+			echo
+			echo 'Command did not fail'
+		} >&2
+		return 1
+	fi
+
+	return 0
+}
+
+test-equals()
+{
+	local -r expected="$1"
+	local -r encountered="$1"
+
+	if [ "$encountered" != "$expected" ]
+	then
+		test -v verbose && {
+			echo
+			echo 'Equality failed'
+			echo "Expected: $expected"
+			echo "Encountered: $encountered"
+		} >&2
+
+		return 1
+	fi
+
+	return 0
+}
+
+{
+	echo -n "Test unsupported feature is detected: "
+
+	expected='Function '\''unsupported'\'' not supported: '
+
+	ln -snf php_ php_unsupported
+	output=$(./php_unsupported)
+	success=$?
+	rm -f php_unsupported
+
+	test-failure "$success" \
+		&& test-equals "$output" "$expected" \
+		&& echo 'Ok' || echo 'KO'
+}
+
+{
+	echo -n "Test php-fpm feature: "
+
+	expected=<<-EOS
+	graph_title Number of running PHP FPM processes
+	php_fpm_num.label Number of running workers
+	EOS
+
+	ln -snf php_ php_fpm_num
+	output=$(./php_fpm_num config)
+	success=$?
+	rm -f php_fpm_num
+
+	test-success "$success" \
+		&& test-equals "$output" "$expected" \
+		&& echo 'Ok' || echo 'KO'
+}
