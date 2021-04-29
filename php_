@@ -37,6 +37,7 @@ munin-php-main()
 munin-php-fpm_num-labels()
 {
 	echo "graph_title ${title[$function]}"
+	echo "graph_category PHP"
 	echo php_fpm_num.label Number of running workers
 }
 
