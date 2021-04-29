@@ -23,6 +23,7 @@ wget \
 	-O $MUNIN_SHARE_PLUGIN/php_
 
 ln -snf $MUNIN_SHARE_PLUGIN/php_ $MUNIN_ETC_PLUGIN/php_fpm_num
+chmod 0555 $MUNIN_SHARE_PLUGIN/php_
 
 systemctl restart munin-node
 ```
